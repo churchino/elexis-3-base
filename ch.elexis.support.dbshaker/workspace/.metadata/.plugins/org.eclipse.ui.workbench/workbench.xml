@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workbench progressCount="4" version="2.0">
+<workbenchAdvisor/>
+<window height="913" width="1516" x="76" y="0">
+<fastViewData fastViewLocation="1024">
+<orientation position="512" view="ch.elexis.DiagnosenView"/>
+<orientation position="512" view="ch.elexis.LeistungenView"/>
+</fastViewData>
+<perspectiveBar>
+<itemSize x="160"/>
+</perspectiveBar>
+<coolbarLayout>
+<coolItem itemType="typeToolBarContribution" x="156" y="30"/>
+<coolItem itemType="typeToolBarContribution" x="248" y="30"/>
+<coolItem id="ch.elexis.toolbar1" itemType="typeToolBarContribution" x="36" y="30"/>
+<coolItem id="ch.elexis.coolbar.MandantSelection" itemType="typeToolBarContribution" x="197" y="30"/>
+<coolItem id="org.iatrix.help.wiki.toolbar" itemType="typeToolBarContribution" x="36" y="30"/>
+</coolbarLayout>
+<page focus="true" label="&lt;Unknown Label&gt; - Patientenübersicht">
+<editors>
+<editorArea activeWorkbook="DefaultEditorWorkbook">
+<info part="DefaultEditorWorkbook">
+<folder appearance="1" expanded="2">
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
+</folder>
+</info>
+</editorArea>
+</editors>
+<views>
+<view id="ch.elexis.PatHeuteView" partName="Kons. nach Datum">
+<viewState/>
+</view>
+<view id="ch.elexis.schoebufaelle" partName="Fälle">
+<viewState/>
+</view>
+<view id="ch.elexis.HistoryView" partName="Konsultationen">
+<viewState/>
+</view>
+<view id="ch.elexis.Rezepte" partName="Rezepte"/>
+<view id="ch.elexis.auf" partName="AUF"/>
+<view id="org.iatrix.messwerte.views.MesswerteView" partName="Messwerte Iatrix">
+<viewState/>
+</view>
+<view id="org.iatrix.views.JournalView" partName="KG Iatrix">
+<viewState/>
+</view>
+<view id="ch.elexis.PatDetail_v2" partName="Patient Detail">
+<viewState/>
+</view>
+<view id="ch.elexis.DiagnosenView" partName="Diagnosen"/>
+<view id="ch.elexis.PatListView" partName="Patienten">
+<viewState/>
+</view>
+<view id="ch.elexis.Konsdetail" partName="Konsultation"/>
+<view id="ch.elexis.Labor" partName="Labor"/>
+<view id="ch.elexis.LeistungenView" partName="Leistungen"/>
+</views>
+<perspectives activePart="org.iatrix.messwerte.views.MesswerteView" activePerspective="ch.elexis.PatientPerspective">
+<perspective editorAreaTrimState="2" editorAreaVisible="0" fixed="0" version="0.016">
+<descriptor class="ch.elexis.PatientPerspektive" id="ch.elexis.PatientPerspective" label="Patientenübersicht"/>
+<show_view_action id="ch.elexis.PatDetail_v2"/>
+<show_view_action id="ch.elexis.PatListView"/>
+<show_view_action id="ch.elexis.HistoryView"/>
+<show_view_action id="ch.elexis.PatHeuteView"/>
+<show_view_action id="ch.elexis.Konsdetail"/>
+<show_view_action id="ch.elexis.Rezepte"/>
+<show_view_action id="ch.elexis.FallDetailView"/>
+<perspective_action id="ch.elexis.PatientPerspective"/>
+<perspective_action id="ch.elexis.schoebufaelle"/>
+<view id="ch.elexis.PatHeuteView"/>
+<view id="ch.elexis.PatListView"/>
+<view id="ch.elexis.PatDetail_v2"/>
+<view id="ch.elexis.Konsdetail"/>
+<view id="ch.elexis.Labor"/>
+<view id="ch.elexis.Rezepte"/>
+<view id="ch.elexis.auf"/>
+<view id="ch.elexis.schoebufaelle"/>
+<view id="ch.elexis.HistoryView"/>
+<view id="org.iatrix.messwerte.views.MesswerteView"/>
+<view id="org.iatrix.views.JournalView"/>
+<fastViews>
+<view id="ch.elexis.LeistungenView" ratio="0.5"/>
+<view id="ch.elexis.DiagnosenView" ratio="0.5"/>
+</fastViews>
+<fastViewBars/>
+<layout>
+<mainWindow>
+<info folder="true" part="Links.folder">
+<folder activePageID="ch.elexis.PatHeuteView" appearance="2" expanded="2">
+<page content="ch.elexis.PatHeuteView" label="Kons. nach Datum"/>
+<page content="ch.elexis.PatListView" label="Patienten"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
+<part id="0"/>
+<part id="1"/>
+</presentation>
+</folder>
+</info>
+<info folder="true" part="stickyFolderRight" ratio="0.7495049" ratioLeft="757" ratioRight="253" relationship="2" relative="Links.folder">
+<folder appearance="2" expanded="2">
+<page content="org.eclipse.ui.internal.introview" label="LabelNotFound"/>
+</folder>
+</info>
+<info part="org.eclipse.ui.editorss" ratio="0.4" ratioLeft="404" ratioRight="606" relationship="2" relative="Links.folder"/>
+<info folder="true" part="Haupt.Folder" ratio="0.29950494" ratioLeft="121" ratioRight="283" relationship="2" relative="Links.folder">
+<folder activePageID="ch.elexis.PatDetail_v2" appearance="2" expanded="2">
+<page content="ch.elexis.PatDetail_v2" label="Patient Detail"/>
+<page content="ch.elexis.Konsdetail" label="Konsultation"/>
+<page content="ch.elexis.Labor" label="Labor"/>
+<page content="ch.elexis.Rezepte" label="Rezepte"/>
+<page content="ch.elexis.auf" label="AUF"/>
+<page content="ch.elexis.FallDetailView" label="LabelNotFound"/>
+<page content="ch.elexis.TextView" label="LabelNotFound"/>
+<page content="ch.elexis.Kompendium" label="LabelNotFound"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
+<part id="0"/>
+<part id="1"/>
+<part id="2"/>
+<part id="3"/>
+<part id="4"/>
+</presentation>
+</folder>
+</info>
+<info folder="true" part="Rechts.folder" ratio="0.30850047" ratioLeft="323" ratioRight="724" relationship="2" relative="Haupt.Folder">
+<folder activePageID="org.iatrix.messwerte.views.MesswerteView" appearance="2" expanded="2">
+<page content="ch.elexis.HistoryView" label="Konsultationen"/>
+<page content="org.iatrix.messwerte.views.MesswerteView" label="Messwerte Iatrix"/>
+<page content="org.iatrix.views.JournalView" label="KG Iatrix"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
+<part id="0"/>
+<part id="1"/>
+<part id="2"/>
+</presentation>
+</folder>
+</info>
+<info folder="true" part="links.unten" ratio="0.6996904" ratioLeft="452" ratioRight="194" relationship="4" relative="Links.folder">
+<folder activePageID="ch.elexis.schoebufaelle" appearance="2" expanded="2">
+<page content="ch.elexis.schoebufaelle" label="Fälle"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
+<part id="0"/>
+</presentation>
+</folder>
+</info>
+</mainWindow>
+</layout>
+</perspective>
+</perspectives>
+<workingSets/>
+<navigationHistory/>
+</page>
+<workbenchWindowAdvisor/>
+<actionBarAdvisor/>
+<trimLayout>
+<trimArea IMemento.internal.id="128">
+<trimItem IMemento.internal.id="org.eclipse.ui.internal.WorkbenchWindow.topBar"/>
+</trimArea>
+<trimArea IMemento.internal.id="1024">
+<trimItem IMemento.internal.id="org.eclise.ui.internal.FastViewBar"/>
+<trimItem IMemento.internal.id="org.eclipse.jface.action.StatusLineManager"/>
+<trimItem IMemento.internal.id="org.eclipse.ui.internal.progress.ProgressRegion"/>
+</trimArea>
+</trimLayout>
+</window>
+<mruList/>
+</workbench>
