@@ -17,13 +17,13 @@ import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import ch.elexis.ElexisException;
+import ch.elexis.core.exceptions.ElexisException;
 import ch.elexis.data.Brief;
 import ch.elexis.data.Query;
-import ch.elexis.services.GlobalServiceDescriptors;
-import ch.elexis.services.IDocumentManager;
-import ch.elexis.text.IOpaqueDocument;
-import ch.elexis.util.Extensions;
+import ch.elexis.core.data.services.GlobalServiceDescriptors;
+import ch.elexis.core.data.services.IDocumentManager;
+import ch.elexis.core.data.interfaces.text.IOpaqueDocument;
+import ch.elexis.core.data.util.Extensions;
 
 public class DocumentRemover {
 	

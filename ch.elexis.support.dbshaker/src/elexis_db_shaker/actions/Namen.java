@@ -23,7 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import ch.elexis.util.PlatformHelper;
-import ch.elexis.util.SWTHelper;
+import ch.elexis.core.ui.util.SWTHelper;
 
 public class Namen {
 	
