@@ -13,7 +13,6 @@
  *******************************************************************************/
 package elexis_db_shaker.actions;
 
-import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 

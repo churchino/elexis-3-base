@@ -23,7 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
-import ch.elexis.util.PlatformHelper;
+import ch.elexis.core.data.util.PlatformHelper;
 
 public class Lipsum {
 	List<String> sentences;
