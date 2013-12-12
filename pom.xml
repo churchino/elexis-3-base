@@ -27,6 +27,8 @@
   <module>ch.elexis.base.p2site</module>
   <module>ch.elexis.base.textplugin</module>
   <module>ch.elexis.base.textplugin.feature</module>
+  <module>ch.elexis.support.dbshaker</module>
+  <module>ch.elexis.support.dbshaker.feature</module>
   <module>ch.elexis.icpc</module>
   <module>ch.elexis.icpc.feature</module>
   <module>ch.elexis.externe_dokumente</module>
