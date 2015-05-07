@@ -24,13 +24,14 @@ import org.eclipse.swt.widgets.Text;
 
 import ch.elexis.core.data.events.ElexisEvent;
 import ch.elexis.core.data.events.ElexisEventDispatcher;
-import ch.elexis.core.ui.events.ElexisUiEventListenerImpl;
+import ch.elexis.core.data.events.ElexisEventListenerImpl;
 import ch.elexis.core.ui.util.viewers.CommonViewer;
 import ch.elexis.core.ui.util.viewers.ViewerConfigurer.ControlFieldListener;
 import ch.elexis.core.ui.util.viewers.ViewerConfigurer.ControlFieldProvider;
 import ch.elexis.data.Konsultation;
 import ch.elexis.data.PersistentObject;
 import ch.elexis.data.Query;
+import ch.elexis.labortarif2009.data.Labor2009Tarif;
 import ch.rgw.tools.IFilter;
 import ch.rgw.tools.TimeTool;
 
@@ -41,13 +42,51 @@ public class Labor2009ControlFieldProvider implements ControlFieldProvider {
 	
 	private Text txtFilter;
 	
+	private String previousKonsTime;
+	private String newKonsTime;
+	private TimeTool konsTime = new TimeTool();
 	private Labor2009CodeTextValidFilter filter;
-	private FilterKonsultationListener konsFilter;
+	private UpdateDateEventListener updateDateListener = new UpdateDateEventListener();
 	
 	public Labor2009ControlFieldProvider(final CommonViewer viewer){
 		commonViewer = viewer;
-		konsFilter = new FilterKonsultationListener(Konsultation.class);
 		filter = new Labor2009CodeTextValidFilter();
+		
+		ElexisEventDispatcher.getInstance().addListeners(updateDateListener);
+	}
+	
+	private class UpdateDateEventListener extends ElexisEventListenerImpl {
+		public UpdateDateEventListener(){
+			super(Konsultation.class, ElexisEvent.EVENT_SELECTED | ElexisEvent.EVENT_DESELECTED);
+		}
+		
+		@Override
+		public void catchElexisEvent(ElexisEvent ev){
+			Konsultation selectedKons =
+				(Konsultation) ElexisEventDispatcher.getSelected(Konsultation.class);
+			if (selectedKons != null) {
+				newKonsTime = selectedKons.getDatum();
+				konsTime.set(newKonsTime);
+				filter.setValidDate(konsTime);
+			} else {
+				newKonsTime = null;
+				filter.setValidDate(null);
+			}
+			if (needsRefresh()) {
+				refreshViewer();
+			}
+		}
+		
+		private boolean needsRefresh(){
+			boolean ret = true;
+			if (previousKonsTime == null && newKonsTime == null) {
+				ret = false;
+			} else if (previousKonsTime != null && newKonsTime != null) {
+				ret = !previousKonsTime.equals(newKonsTime);
+			}
+			previousKonsTime = newKonsTime;
+			return ret;
+		}
 	}
 	
 	public Composite createControl(Composite parent){
@@ -124,61 +163,45 @@ public class Labor2009ControlFieldProvider implements ControlFieldProvider {
 		// first filter then viewer -> viewer not ready on createControl.
 		if (viewer == null) {
 			viewer = commonViewer.getViewerWidget();
+			Query<Labor2009Tarif> qbe = new Query<Labor2009Tarif>(Labor2009Tarif.class);
+			viewer.setInput(qbe.execute());
 			viewer.addFilter(filter);
-			ElexisEventDispatcher.getInstance().addListeners(konsFilter);
-			txtFilter.addKeyListener(new FilterKeyListener(txtFilter, viewer));
-			// call with null, event is not used in listener impl.
-			konsFilter.catchElexisEvent(null);
+			txtFilter.addKeyListener(new FilterKeyListener(txtFilter));
+			txtFilter.setFocus();
+			// trigger initial filtering
+			updateDateListener.catchElexisEvent(null);
 		}
 	}
 	
-	private class FilterKonsultationListener extends ElexisUiEventListenerImpl {
-		
-		public FilterKonsultationListener(Class<?> clazz){
-			super(clazz);
-		}
-		
-		@Override
-		public void runInUi(ElexisEvent ev){
-			Konsultation selectedKons =
-				(Konsultation) ElexisEventDispatcher.getSelected(Konsultation.class);
-			// apply the filter
-			if (selectedKons != null) {
-				filter.setValidDate(new TimeTool(selectedKons.getDatum()));
-				viewer.getControl().setRedraw(false);
-				viewer.refresh();
-				viewer.getControl().setRedraw(true);
-			} else {
-				filter.setValidDate(null);
-				viewer.getControl().setRedraw(false);
-				viewer.refresh();
-				viewer.getControl().setRedraw(true);
-			}
+	private void refreshViewer(){
+		// update the view async
+		if (viewer != null) {
+			viewer.getControl().getDisplay().asyncExec(new Runnable() {
+				@Override
+				public void run(){
+					viewer.getControl().setRedraw(false);
+					viewer.refresh();
+					viewer.getControl().setRedraw(true);
+				}
+			});
 		}
 	}
-	
+
 	private class FilterKeyListener extends KeyAdapter {
 		private Text text;
-		private StructuredViewer viewer;
-		
-		FilterKeyListener(Text filterTxt, StructuredViewer viewer){
+
+		FilterKeyListener(Text filterTxt){
 			text = filterTxt;
-			this.viewer = viewer;
 		}
 		
 		public void keyReleased(KeyEvent ke){
 			String txt = text.getText();
 			if (txt.length() > 1) {
 				filter.setSearchText(txt);
-				viewer.getControl().setRedraw(false);
-				viewer.refresh();
-				viewer.getControl().setRedraw(true);
 			} else {
 				filter.setSearchText(null);
-				viewer.getControl().setRedraw(false);
-				viewer.refresh();
-				viewer.getControl().setRedraw(true);
 			}
+			refreshViewer();
 		}
 	}
 }

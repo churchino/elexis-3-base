@@ -11,6 +11,7 @@
  *******************************************************************************/
 package ch.elexis.base.ch.labortarif_2009.ui;
 
+import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 
@@ -22,12 +23,46 @@ public class Labor2009CodeTextValidFilter extends ViewerFilter {
 	private String searchString;
 	private TimeTool validDate;
 	
+	private Labor2009ContentProvider contentProvider;
+
+	protected static class TarifDescription {
+		private TimeTool compareTime = new TimeTool();
+
+		private String validFromString;
+		private String validToString;
+		private String code;
+		private String text;
+		
+		public TarifDescription(Labor2009Tarif tarif){
+			String[] values =
+				tarif.get(true, Labor2009Tarif.FLD_GUELTIG_VON, Labor2009Tarif.FLD_GUELTIG_BIS,
+					Labor2009Tarif.FLD_CODE, Labor2009Tarif.FLD_NAME);
+			validFromString = values[0];
+			validToString = values[1];
+			code = values[2].toLowerCase();
+			text = values[3].toLowerCase();
+		}
+		
+		public boolean isValidOn(TimeTool date){
+			if (validFromString != null && validFromString.trim().length() > 0) {
+				compareTime.set(validFromString);
+				if (compareTime.after(date))
+					return false;
+			}
+			if (validToString != null && validToString.trim().length() > 0) {
+				compareTime.set(validToString);
+				if (compareTime.before(date) || compareTime.equals(date))
+					return false;
+			}
+			return true;
+		}
+	}
+	
 	public void setSearchText(String s){
 		if (s == null || s.length() == 0) {
 			searchString = s;
 		} else {
-			s = s.replaceAll("\\.", "\\\\.");
-			searchString = ".*" + s.toLowerCase() + ".*"; //$NON-NLS-1$ //$NON-NLS-2$
+			searchString = s.toLowerCase();
 		}
 	}
 	
@@ -42,27 +77,34 @@ public class Labor2009CodeTextValidFilter extends ViewerFilter {
 	
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element){
+		// lookup cache
 		Labor2009Tarif tarif = (Labor2009Tarif) element;
+		TarifDescription description = null;
 		
-		if (validDate != null) {
-			if (!tarif.isValidOn(validDate))
-				return false;
+		if(contentProvider == null) {
+			contentProvider = (Labor2009ContentProvider)((StructuredViewer)viewer).getContentProvider(); 
 		}
 		
-		if (searchString == null || searchString.length() == 0) {
-			return true;
-		}
+		description = contentProvider.getDescription(tarif);
 		
-		String code = tarif.getCode().toLowerCase();
-		if (code != null && code.matches(searchString)) {
-			return true;
+		if (description != null) {
+			if (validDate != null) {
+				if (!description.isValidOn(validDate))
+					return false;
+			}
+			
+			if (searchString == null || searchString.length() == 0) {
+				return true;
+			}
+			
+			if (description.code != null && description.code.contains(searchString)) {
+				return true;
+			}
+			
+			if (description.text != null && description.text.contains(searchString)) {
+				return true;
+			}
 		}
-		
-		String text = tarif.get(Labor2009Tarif.FLD_NAME).toLowerCase();
-		if (text != null && text.matches(searchString)) {
-			return true;
-		}
-		
 		return false;
 	}
 }

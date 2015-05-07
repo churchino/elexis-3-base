@@ -19,8 +19,10 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
 import ch.elexis.agenda.data.IPlannable;
+import ch.elexis.agenda.data.Termin;
 import ch.elexis.agenda.util.Plannables;
 import ch.elexis.core.data.activator.CoreHub;
+import ch.elexis.core.data.events.ElexisEventDispatcher;
 import ch.elexis.core.ui.text.ITextPlugin.ICallback;
 import ch.elexis.core.ui.text.TextContainer;
 import ch.elexis.core.ui.util.SWTHelper;
@@ -33,6 +35,11 @@ public class TerminListeDruckenDialog extends TitleAreaDialog implements ICallba
 	public TerminListeDruckenDialog(Shell shell, IPlannable[] liste){
 		super(shell);
 		this.liste = liste;
+		// use first appointment for day and section reference
+		if (liste != null && liste.length > 0) {
+			Termin termin = (Termin) liste[0];
+			ElexisEventDispatcher.fireSelectionEvent(termin);
+		}
 	}
 	
 	@Override
@@ -89,5 +96,4 @@ public class TerminListeDruckenDialog extends TitleAreaDialog implements ICallba
 	public boolean saveAs(){
 		return false;
 	}
-	
 }

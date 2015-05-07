@@ -9,7 +9,6 @@
  *    G. Weirich - initial implementation
  *    
  *******************************************************************************/
-
 package ch.elexis.base.ch.artikel.views;
 
 import org.eclipse.swt.SWT;
@@ -27,6 +26,7 @@ import ch.elexis.core.ui.UiDesk;
 import ch.elexis.core.ui.util.LabeledInputField;
 import ch.elexis.core.ui.util.SWTHelper;
 import ch.elexis.core.ui.views.IDetailDisplay;
+import ch.elexis.core.ui.views.controls.ArticleDefaultSignatureComposite;
 import ch.rgw.tools.Money;
 
 public class MiGelDetailDisplay implements IDetailDisplay {
@@ -41,11 +41,9 @@ public class MiGelDetailDisplay implements IDetailDisplay {
 		parent.setLayout(new GridLayout());
 		form = tk.createScrolledForm(parent);
 		form.setLayoutData(SWTHelper.getFillGridData(1, true, 1, true));
+		
 		Composite ret = form.getBody();
 		ret.setLayout(new GridLayout());
-		
-		// TableWrapLayout twl=new TableWrapLayout();
-		// ret.setLayout(twl);
 		
 		ifName = new LabeledInputField(ret, "Name");
 		ifName.setLayoutData(SWTHelper.getFillGridData(1, true, 1, false));
@@ -62,14 +60,7 @@ public class MiGelDetailDisplay implements IDetailDisplay {
 		});
 		ifPreis = new LabeledInputField(ret, Messages.MiGelDetailDisplay_PriceUnit);
 		tLong = SWTHelper.createText(tk, ret, 4, SWT.READ_ONLY);
-		
-		/*
-		 * tblArtikel=new
-		 * LabeledInputField.AutoForm(ret,Artikeldetail.getFieldDefs(parent.getShell()));
-		 * 
-		 * TableWrapData twd=new TableWrapData(TableWrapData.FILL_GRAB); twd.grabHorizontal=true;
-		 * tblArtikel.setLayoutData(twd);
-		 */
+
 		return ret;
 	}
 	

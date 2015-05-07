@@ -12,7 +12,10 @@
 
 package ch.elexis.base.ch.diagnosecodes.views;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -30,13 +33,11 @@ import ch.elexis.data.TICode;
 
 public class TICodeSelectorFactory extends CodeSelectorFactory {
 	
-	public TICodeSelectorFactory(){
-		System.out.println("hier"); //$NON-NLS-1$
-	}
+	public TICodeSelectorFactory(){}
 	
 	@Override
 	public ViewerConfigurer createViewerConfigurer(CommonViewer cv){
-		return new ViewerConfigurer(new TICodeContentProvider(), new TICodeLabelProvider(),
+		return new ViewerConfigurer(new TICodeContentProvider(cv), new TICodeLabelProvider(),
 			new DefaultControlFieldProvider(cv, new String[] {
 				"Text"}), //$NON-NLS-1$
 			new ViewerConfigurer.DefaultButtonProvider(), new SimpleWidgetProvider(
@@ -45,9 +46,36 @@ public class TICodeSelectorFactory extends CodeSelectorFactory {
 	
 	static class TICodeContentProvider implements ITreeContentProvider,
 			ICommonViewerContentProvider {
+		private CommonViewer viewer;
+		private String value;
+		private String TICKey = "Text";
+		
+		private List<TICode> nodes;
+		private List<TICode> childs;
+		private List<TICode> allNodes;
+		
+		public TICodeContentProvider(CommonViewer viewer){
+			this.viewer = viewer;
+			allNodes = new ArrayList<TICode>(Arrays.asList(TICode.getRootNodes()));
+			nodes = allNodes;
+			value = "";
+		}
+		
 		public Object[] getChildren(Object parentElement){
 			TICode c = (TICode) parentElement;
-			return c.getChildren();
+			// get all children if no search value is set
+			if (value == null || value.isEmpty()) {
+				return c.getChildren();
+			}
+			
+			// only show children that match the search query
+			List<TICode> availableChildren = new ArrayList<TICode>();
+			for (TICode tic : c.getChildren()) {
+				if (childs.contains(tic)) {
+					availableChildren.add(tic);
+				}
+			}
+			return availableChildren.toArray(new TICode[availableChildren.size()]);
 		}
 		
 		public Object getParent(Object element){
@@ -61,7 +89,7 @@ public class TICodeSelectorFactory extends CodeSelectorFactory {
 		}
 		
 		public Object[] getElements(Object inputElement){
-			return TICode.getRootNodes();
+			return nodes.toArray(new TICode[nodes.size()]);
 		}
 		
 		public void dispose(){
@@ -71,11 +99,100 @@ public class TICodeSelectorFactory extends CodeSelectorFactory {
 		
 		public void inputChanged(Viewer v, Object oldInput, Object newInput){}
 		
-		public void startListening(){}
+		public void startListening(){
+			viewer.getConfigurer().getControlFieldProvider().addChangeListener(this);
+		}
 		
-		public void stopListening(){}
+		public void stopListening(){
+			viewer.getConfigurer().getControlFieldProvider().removeChangeListener(this);
+		}
 		
-		public void changed(HashMap<String, String> values){}
+		public void changed(HashMap<String, String> values){
+			String filterText = values.get(TICKey).toLowerCase();
+			if (filterText == null || filterText.isEmpty() || filterText.equals("%")) {
+				nodes = allNodes;
+				setFilterValue("");
+			} else {
+				List<TICode> filteredTICodes = new ArrayList<TICode>();
+				
+				boolean startMatchesOnly = true;
+				// search for any match if query starts with %
+				if (filterText.startsWith("%")) {
+					filterText = filterText.replace("%", "");
+					startMatchesOnly = false;
+				}
+				setFilterValue(filterText);
+				filteredTICodes = findMatchingTiCodes(filterText, startMatchesOnly);
+				nodes = filteredTICodes;
+			}
+			// update view
+			viewer.notify(CommonViewer.Message.update);
+		}
+		
+		/**
+		 * looks for TICode texts that match with the searched query
+		 * 
+		 * @param search
+		 *            pattern
+		 * @param startMatchesOnly
+		 *            whether only to search for {@link TICode}s starting with the pattern (
+		 *            {@code true} or containing it anywhere in the name ({@code false})
+		 * @return list of search term matching TICodes
+		 */
+		private List<TICode> findMatchingTiCodes(String search, boolean startMatchesOnly){
+			childs = new ArrayList<TICode>();
+			List<TICode> matches = new ArrayList<TICode>();
+			
+			for (TICode tiCode : allNodes) {
+				String text = tiCode.getText().toLowerCase();
+				if (isMatch(search, text, startMatchesOnly)) {
+					matches.add(tiCode);
+				}
+				matches =
+					addMatchingChildren(search, startMatchesOnly, matches, tiCode.getChildren(),
+						tiCode);
+				
+			}
+			return matches;
+		}
+		
+		/**
+		 * adds all children who's names match the search pattern
+		 * 
+		 * @param search
+		 *            word/pattern
+		 * @param startMatchesOnly
+		 *            {@link TICode} must {@code true}: start with pattern/ {@code false}: contain
+		 *            pattern
+		 * @param matches
+		 *            list of matching parents
+		 * @param tiChildren
+		 *            all relevant children
+		 * @param parent
+		 * @return up to date list of matching parents
+		 */
+		private List<TICode> addMatchingChildren(String search, boolean startMatchesOnly,
+			List<TICode> matches, TICode[] tiChildren, TICode parent){
+			for (TICode tic : tiChildren) {
+				String text = tic.getText().toLowerCase();
+				if (isMatch(search, text, startMatchesOnly)) {
+					childs.add(tic);
+					if (!matches.contains(parent)) {
+						matches.add(parent);
+					}
+				}
+				
+			}
+			return matches;
+		}
+		
+		private boolean isMatch(String search, String text, boolean startMatchesOnly){
+			if (startMatchesOnly) {
+				return text.startsWith(search);
+			} else {
+				return text.contains(search);
+			}
+		}
 		
 		public void reorder(String field){}
 		
@@ -85,6 +202,10 @@ public class TICodeSelectorFactory extends CodeSelectorFactory {
 		public void init(){
 			// TODO Auto-generated method stub
 			
+		}
+		
+		private void setFilterValue(String value){
+			this.value = value;
 		}
 	}
 	

@@ -26,6 +26,8 @@ import ch.rgw.tools.Result.SEVERITY;
 import ch.rgw.tools.TimeTool;
 
 public class Optifier implements IOptifier {
+	private Verrechnet newVerrechnet;
+
 	/**
 	 * Add and recalculate the various possible amendments
 	 */
@@ -48,11 +50,12 @@ public class Optifier implements IOptifier {
 				}
 			}
 			
-			new Verrechnet(code, kons, 1);
+			newVerrechnet = new Verrechnet(code, kons, 1);
 			Result<Object> res = optify(kons);
 			if (res.isOK()) {
 				return new Result<IVerrechenbar>(code);
 			} else {
+				newVerrechnet.delete();
 				return new Result<IVerrechenbar>(res.getSeverity(), res.getCode(), res.toString(),
 					code, true);
 			}
@@ -106,7 +109,7 @@ public class Optifier implements IOptifier {
 						continue;
 					} else {
 						Labor2009Tarif vlt = (Labor2009Tarif) iv;
-						if (!vlt.get(Labor2009Tarif.FLD_CHAPTER).trim().equals("5.1.2.2.1")) {
+						if (!isSchnellAnalyse(vlt)) {
 							if (vlt.get(Labor2009Tarif.FLD_FACHBEREICH).indexOf("C") > -1) { //$NON-NLS-1$
 								z470710 += v.getZahl();
 							} else {
@@ -185,6 +188,19 @@ public class Optifier implements IOptifier {
 		
 	}
 	
+	private boolean isSchnellAnalyse(Labor2009Tarif vlt){
+		String chapter = vlt.get(Labor2009Tarif.FLD_CHAPTER).trim();
+		if (chapter != null && !chapter.isEmpty()) {
+			String[] chapters = chapter.split(",");
+			for (String string : chapters) {
+				if (string.trim().equals("5.1.2.2.1")) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	public Result<Verrechnet> remove(Verrechnet code, Konsultation kons){
 		List<Verrechnet> l = kons.getLeistungen();
 		l.remove(code);
@@ -211,11 +227,17 @@ public class Optifier implements IOptifier {
 		}
 		
 		if (tarif != null) {
-			return new Verrechnet(tarif, kons, 1);
+			newVerrechnet = new Verrechnet(tarif, kons, 1); 
+			return newVerrechnet;
 		} else {
 			throw new Exception("Tariff not installed correctly"); //$NON-NLS-1$
 		}
 		
+	}
+
+	@Override
+	public Verrechnet getCreatedVerrechnet(){
+		return newVerrechnet;
 	}
 	
 }

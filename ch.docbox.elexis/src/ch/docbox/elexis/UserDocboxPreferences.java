@@ -18,6 +18,7 @@ import java.security.InvalidKeyException;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.xml.ws.BindingProvider;
 
 import org.apache.commons.codec.binary.Base64;
 import org.eclipse.jface.preference.DirectoryFieldEditor;
@@ -42,6 +43,8 @@ import ch.elexis.core.ui.UiDesk;
 import ch.elexis.core.ui.preferences.SettingsPreferenceStore;
 import ch.elexis.core.ui.util.Log;
 import ch.elexis.core.ui.util.SWTHelper;
+import ch.elexis.docbox.ws.client.WsClientConfig;
+import ch.elexis.docbox.ws.client.WsClientUtil;
 import ch.rgw.io.Settings;
 import ch.swissmedicalsuite.HCardBrowser;
 
@@ -68,6 +71,7 @@ public class UserDocboxPreferences extends FieldEditorPreferencePage implements
 	private Button buttonGetAppointmentsEmergencyService;
 	private Button buttonGetAppointmentsPharmaVisits;
 	private Button buttonGetAppointmentsTerminvereinbarung;
+	private Button buttonConfigureCert;
 	
 	private Button buttonUseHCard;
 	
@@ -79,12 +83,11 @@ public class UserDocboxPreferences extends FieldEditorPreferencePage implements
 	
 	static private boolean showSha1SecretKey = true;
 	
-	private static String TESTLOGINIDPREFIX = "TEST_";
-	
 	protected static Log log = Log.get("UserDocboxPreferences"); //$NON-NLS-1$
 	
 	public static boolean isDocboxTest(){
-		return getDocboxLoginID(true) != null && getDocboxLoginID(true).startsWith("TEST_");
+		return getDocboxLoginID(true) != null
+			&& getDocboxLoginID(true).startsWith(WsClientConfig.TESTLOGINIDPREFIX);
 	}
 	
 	public static String getSSOSignature(String ts){
@@ -123,8 +126,6 @@ public class UserDocboxPreferences extends FieldEditorPreferencePage implements
 	
 	public static final String ID = "ch.docbox.elexis.UserDocboxPreferences";//$NON-NLS-1$
 	
-	public static final String USR_DEFDOCBXLOGINID = "docbox/loginid"; //$NON-NLS-1$
-	public static final String USR_DEFDOCBOXPASSWORD = "docbox/password"; //$NON-NLS-1$
 	public static final String USR_DEFDOCBOXPATHFILES = "docbox/pathfiles"; //$NON-NLS-1$
 	public static final String USR_DEFDOCBOXPATHHCARDAPI = "docbox/pathhcardapi"; //$NON-NLS-1$
 	public static final String USR_AGENDASETTINGSPERUSER = "docbox/agendasettingsperuser"; //$NON-NLS-1$
@@ -138,7 +139,6 @@ public class UserDocboxPreferences extends FieldEditorPreferencePage implements
 	public static final String USR_APPOINTMENTSBEREICH = "docbox/getappointmentsbereich";//$NON-NLS-1$
 	public static final String USR_ISDOCBOXTEST = "docbox/isdocboxtest";//$NON-NLS-1$
 	public static final String USR_UPDATEDOCTORDIRECTORY = "docbox/updatedoctordirectory";//$NON-NLS-1$
-	public static final String USR_SECRETKEY = "docbox/secretkey";//$NON-NLS-1$
 	public static final String USR_USEPROXY = "docbox/useproxy"; //$NON-NLS-1$
 	public static final String USR_PROXYHOST = "docbox/proxyhost"; //$NON-NLS-1$
 	public static final String USR_PROXYPORT = "docbox/proxyport"; //$NON-NLS-1$
@@ -185,14 +185,14 @@ public class UserDocboxPreferences extends FieldEditorPreferencePage implements
 		boolean enableForMandant = CoreHub.acl.request(AccessControlDefaults.ACL_USERS);
 		
 		loginIdFieldEditor =
-			new StringFieldEditor(USR_DEFDOCBXLOGINID, Messages.UserDocboxPreferences_LoginId,
-				getFieldEditorParent());
+			new StringFieldEditor(WsClientConfig.USR_DEFDOCBXLOGINID,
+				Messages.UserDocboxPreferences_LoginId, getFieldEditorParent());
 		addField(loginIdFieldEditor);
 		loginIdFieldEditor.setEnabled(enableForMandant, getFieldEditorParent());
 		
 		passwordFieldEditor =
-			new StringFieldEditor(USR_DEFDOCBOXPASSWORD, Messages.UserDocboxPreferences_Password,
-				getFieldEditorParent());
+			new StringFieldEditor(WsClientConfig.USR_DEFDOCBOXPASSWORD,
+				Messages.UserDocboxPreferences_Password, getFieldEditorParent());
 		passwordFieldEditor.getTextControl(getFieldEditorParent()).setEchoChar('*'); //$NON-NLS-1$
 		passwordFieldEditor.setEnabled(enableForMandant, getFieldEditorParent());
 		
@@ -200,12 +200,26 @@ public class UserDocboxPreferences extends FieldEditorPreferencePage implements
 		
 		if (showSha1SecretKey) {
 			secretkeyFieldEditor =
-				new StringFieldEditor(USR_SECRETKEY, Messages.UserDocboxPreferences_SecretKey,
-					getFieldEditorParent());
+				new StringFieldEditor(WsClientConfig.USR_SECRETKEY,
+					Messages.UserDocboxPreferences_SecretKey, getFieldEditorParent());
 			secretkeyFieldEditor.getTextControl(getFieldEditorParent()).setEchoChar('*'); //$NON-NLS-1$
 			secretkeyFieldEditor.setEnabled(enableForMandant, getFieldEditorParent());
 			
 			addField(secretkeyFieldEditor);
+		}
+
+		buttonConfigureCert = new Button(getFieldEditorParent(), SWT.PUSH);
+		buttonConfigureCert.setText("Zertifikat konfigurieren");
+		buttonConfigureCert.setLayoutData(SWTHelper.getFillGridData(3, false, 1, false));
+		buttonConfigureCert.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e){
+				CertificateConfigDialog dlg = new CertificateConfigDialog(getShell());
+				dlg.open();
+			}
+		});
+		if (WsClientUtil.isMedelexisCertAvailable()) {
+			buttonConfigureCert.setEnabled(false);
 		}
 		
 		buttonUseHCard = new Button(getFieldEditorParent(), SWT.CHECK);
@@ -250,10 +264,12 @@ public class UserDocboxPreferences extends FieldEditorPreferencePage implements
 				String sha1Password =
 					(passwordFieldEditor.getStringValue().equals(oldSha1Password) ? oldSha1Password
 							: CDACHServicesClient.getSHA1(passwordFieldEditor.getStringValue()));
-				CoreHub.mandantCfg.set(USR_DEFDOCBXLOGINID, loginIdFieldEditor.getStringValue());
-				CoreHub.mandantCfg.set(USR_DEFDOCBOXPASSWORD, sha1Password);
+				CoreHub.mandantCfg.set(WsClientConfig.USR_DEFDOCBXLOGINID,
+					loginIdFieldEditor.getStringValue());
+				CoreHub.mandantCfg.set(WsClientConfig.USR_DEFDOCBOXPASSWORD, sha1Password);
 				if (showSha1SecretKey && secretkeyFieldEditor != null) {
-					CoreHub.mandantCfg.set(USR_SECRETKEY, secretkeyFieldEditor.getStringValue());
+					CoreHub.mandantCfg.set(WsClientConfig.USR_SECRETKEY,
+						secretkeyFieldEditor.getStringValue());
 				}
 				setUseHCard(buttonUseHCard.getSelection());
 				setUseProxy(buttonUseProxy.getSelection());
@@ -390,15 +406,15 @@ public class UserDocboxPreferences extends FieldEditorPreferencePage implements
 	}
 	
 	public static String getDocboxLoginID(boolean prefixed){
-		String loginId = CoreHub.mandantCfg.get(USR_DEFDOCBXLOGINID, "");//$NON-NLS-1$
-		if (!prefixed && loginId.startsWith(TESTLOGINIDPREFIX)) {
-			loginId = loginId.substring(TESTLOGINIDPREFIX.length());
+		String loginId = CoreHub.mandantCfg.get(WsClientConfig.USR_DEFDOCBXLOGINID, "");//$NON-NLS-1$
+		if (!prefixed && loginId.startsWith(WsClientConfig.TESTLOGINIDPREFIX)) {
+			loginId = loginId.substring(WsClientConfig.TESTLOGINIDPREFIX.length());
 		}
 		return loginId;
 	}
 	
 	public static String getSha1DocboxPassword(){
-		String sha1Password = CoreHub.mandantCfg.get(USR_DEFDOCBOXPASSWORD, "");//$NON-NLS-1$
+		String sha1Password = CoreHub.mandantCfg.get(WsClientConfig.USR_DEFDOCBOXPASSWORD, "");//$NON-NLS-1$
 		return sha1Password;
 	}
 	
@@ -422,7 +438,8 @@ public class UserDocboxPreferences extends FieldEditorPreferencePage implements
 			docboxSha1SecretKey = bufferedReader.readLine();
 		} catch (Exception e) {
 			docboxSha1SecretKey =
-				CDACHServicesClient.getSHA1(CoreHub.mandantCfg.get(USR_SECRETKEY, ""));
+				CDACHServicesClient.getSHA1(CoreHub.mandantCfg
+					.get(WsClientConfig.USR_SECRETKEY, ""));
 			showSha1SecretKey = true;
 		}
 		return docboxSha1SecretKey;
@@ -491,12 +508,14 @@ public class UserDocboxPreferences extends FieldEditorPreferencePage implements
 		String sha1Password =
 			(passwordFieldEditor.getStringValue().equals(oldSha1Password) ? oldSha1Password
 					: CDACHServicesClient.getSHA1(passwordFieldEditor.getStringValue()));
-		CoreHub.mandantCfg.set(USR_DEFDOCBXLOGINID, loginIdFieldEditor.getStringValue());
-		CoreHub.mandantCfg.set(USR_DEFDOCBOXPASSWORD, sha1Password);
+		CoreHub.mandantCfg.set(WsClientConfig.USR_DEFDOCBXLOGINID,
+			loginIdFieldEditor.getStringValue());
+		CoreHub.mandantCfg.set(WsClientConfig.USR_DEFDOCBOXPASSWORD, sha1Password);
 		CoreHub.mandantCfg.set(USR_DEFDOCBOXPATHFILES, directoryFieldEditor.getStringValue());
 		CoreHub.mandantCfg.set(USR_DEFDOCBOXPATHHCARDAPI, directoryhCardEditor.getStringValue());
 		if (showSha1SecretKey) {
-			CoreHub.mandantCfg.set(USR_SECRETKEY, secretkeyFieldEditor.getStringValue());
+			CoreHub.mandantCfg.set(WsClientConfig.USR_SECRETKEY,
+				secretkeyFieldEditor.getStringValue());
 		}
 		
 		if (buttonAgendaSettingsPerUser != null) {
@@ -547,9 +566,9 @@ public class UserDocboxPreferences extends FieldEditorPreferencePage implements
 	public boolean performCancel(){
 		super.performCancel();
 		
-		CoreHub.mandantCfg.set(USR_DEFDOCBXLOGINID, oldLoginId);
-		CoreHub.mandantCfg.set(USR_DEFDOCBOXPASSWORD, oldSha1Password);
-		CoreHub.mandantCfg.set(USR_SECRETKEY, oldSecretKey);
+		CoreHub.mandantCfg.set(WsClientConfig.USR_DEFDOCBXLOGINID, oldLoginId);
+		CoreHub.mandantCfg.set(WsClientConfig.USR_DEFDOCBOXPASSWORD, oldSha1Password);
+		CoreHub.mandantCfg.set(WsClientConfig.USR_SECRETKEY, oldSecretKey);
 		setUseHCard(oldUseHCard);
 		setUseProxy(oldUseProxy);
 		setProxyHost(oldProxyHost);
@@ -675,16 +694,19 @@ public class UserDocboxPreferences extends FieldEditorPreferencePage implements
 			System.setProperty("https.proxyPort", UserDocboxPreferences.getProxyPort());
 		}
 		CDACHServices_Service serviceClient = new CDACHServices_Service();
-		String username = getDocboxLoginID(false);
 		if (UserDocboxPreferences.useHCard()) {
 			new HCardBrowser(UserDocboxPreferences.getDocboxLoginID(false), null).setProxyPort();
 		}
-		return CDACHServicesClient
-			.addWsSecurityAndHttpConfig(serviceClient,
-				UserDocboxPreferences.getSha1DocboxSecretKey()
-					+ (UserDocboxPreferences.useHCard() ? "" : username), (UserDocboxPreferences
-					.useHCard() ? "" : UserDocboxPreferences.getSha1DocboxPassword()),
-				getDocboxServiceUrl());
+		WsClientUtil.addWsSecurityAndHttpConfigWithClientCert(serviceClient,
+			WsClientConfig.getSecretkey() + WsClientConfig.getUsername(),
+			WsClientConfig.getPassword(), WsClientConfig.getP12Path(), null,
+			WsClientConfig.getP12Password(), null);
+		
+		CDACHServices port = serviceClient.getCDACHServices();
+		((BindingProvider) port).getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY,
+			getDocboxServiceUrl());
+		
+		return port;
 	}
 	
 	public static boolean downloadAppointments(){

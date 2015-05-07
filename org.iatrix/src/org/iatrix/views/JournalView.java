@@ -130,6 +130,7 @@ import ch.elexis.core.ui.events.ElexisUiEventListenerImpl;
 import ch.elexis.core.ui.icons.Images;
 import ch.elexis.core.ui.text.EnhancedTextField;
 import ch.elexis.core.ui.util.IKonsExtension;
+import ch.elexis.core.ui.util.IKonsMakro;
 import ch.elexis.core.ui.util.Log;
 import ch.elexis.core.ui.util.SWTHelper;
 import ch.elexis.core.ui.util.ViewMenus;
@@ -1463,6 +1464,13 @@ public class JournalView extends ViewPart implements IActivationListener, ISavea
 			String provider = x.connect(text);
 			hXrefs.put(provider, x);
 		}
+		@SuppressWarnings("unchecked")
+		List<IKonsMakro> makros =
+			Extensions.getClasses(
+				Extensions.getExtensions(ExtensionPointConstantsUi.KONSEXTENSION),
+				"KonsMakro", false); //$NON-NLS-1$
+		text.setExternalMakros(makros);
+		
 		text.setLayoutData(SWTHelper.getFillGridData(1, true, 1, true));
 
 		text.getControl().addFocusListener(new FocusAdapter() {
@@ -2265,8 +2273,7 @@ public class JournalView extends ViewPart implements IActivationListener, ISavea
 
 		exportToClipboardAction = new Action("Export (Zwischenablage)") {
 			{
-				setImageDescriptor(AbstractUIPlugin.imageDescriptorFromPlugin("ch.elexis",
-					"rsc/plaf/modern/icons/export.ico"));
+				setImageDescriptor(Images.IMG_EXPORT.getImageDescriptor());
 				setToolTipText("Zusammenfassung in Zwischenablage kopieren");
 			}
 
@@ -2280,8 +2287,7 @@ public class JournalView extends ViewPart implements IActivationListener, ISavea
 
 		sendEmailAction = new Action("E-Mail verschicken") {
 			{
-				setImageDescriptor(AbstractUIPlugin.imageDescriptorFromPlugin("ch.elexis",
-					"rsc/mail.png"));
+				setImageDescriptor(Images.IMG_MAIL.getImageDescriptor());
 				setToolTipText("E-Mail Programm öffnent (mit Medikation und allen Konsultationen)");
 			}
 

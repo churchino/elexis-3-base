@@ -11,7 +11,10 @@ import org.eclipse.jface.viewers.ColumnPixelData;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -43,8 +46,8 @@ import ch.elexis.core.constants.StringConstants;
 import ch.elexis.core.data.activator.CoreHub;
 import ch.elexis.core.data.events.ElexisEvent;
 import ch.elexis.core.data.events.ElexisEventDispatcher;
-import ch.elexis.core.data.events.ElexisEventListenerImpl;
 import ch.elexis.core.model.IPersistentObject;
+import ch.elexis.core.ui.events.ElexisUiEventListenerImpl;
 import ch.elexis.data.Anwender;
 import ch.elexis.data.Patient;
 import ch.elexis.data.Query;
@@ -69,13 +72,13 @@ public class ESRView extends ViewPart {
 	public final static ACE DISPLAY_ESR = new ACE(AccessControlDefaults.DATA,
 		"ch.elexis.ebanking_ch:DisplayESR", Messages.ESRView_showESRData);
 	
-	private final ElexisEventListenerImpl eeli_user = new ElexisEventListenerImpl(Anwender.class,
+	private final ElexisUiEventListenerImpl eeli_user = new ElexisUiEventListenerImpl(
+		Anwender.class,
 		ElexisEvent.EVENT_USER_CHANGED) {
 		
-		@Override
-		public void catchElexisEvent(ElexisEvent ev){
+		public void runInUi(ElexisEvent ev){
 			updateView();
-		}
+		};
 	};
 	
 	static final int DATUM_INDEX = 0;
@@ -340,6 +343,26 @@ public class ESRView extends ViewPart {
 		
 		tableViewer.setLabelProvider(new ESRLabelProvider());
 		tableViewer.setContentProvider(new ESRContentProvider(lblSUMME, DISPLAY_ESR));
+		
+		tableViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			
+			@Override
+			public void selectionChanged(SelectionChangedEvent event){
+				StructuredSelection ss = (StructuredSelection) tableViewer.getSelection();
+				Object firstElement = ss.getFirstElement();
+				if (firstElement != null) {
+					ESRRecord selRecord = (ESRRecord) firstElement;
+					ElexisEventDispatcher.fireSelectionEvent(selRecord);
+					Rechnung rn = selRecord.getRechnung();
+					if (rn != null) {
+						ElexisEventDispatcher.fireSelectionEvent(rn);
+					}
+				} else {
+					ElexisEventDispatcher.clearSelection(ESRRecord.class);
+				}
+				
+			}
+		});
 		
 		ViewerFilter[] filters = new ViewerFilter[] {
 			FilterSearchField.getInstance()

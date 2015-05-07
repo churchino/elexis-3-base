@@ -5,7 +5,7 @@
   <artifactId>elexis-3-base</artifactId>
   <version>3.0.0-SNAPSHOT</version>
   <properties>
-    <tycho-version>0.21.0</tycho-version>
+    <tycho-version>0.22.0</tycho-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <tycho-extras.version>${tycho-version}</tycho-extras.version>
     <juno-repo.url>http://download.eclipse.org/releases/juno</juno-repo.url>
@@ -106,8 +106,8 @@
   <module>ch.elexis.laborimport_labtop.feature</module>
   <module>ch.elexis.laborimport_lg1</module>
   <module>ch.elexis.laborimport_lg1.feature</module>
-  <module>ch.elexis.laborimport.ilamed</module>
-  <module>ch.elexis.laborimport.ilamed.feature</module>
+  <module>ch.elexis.laborimport.synlab</module>
+  <module>ch.elexis.laborimport.synlab.feature</module>
   <module>ch.elexis.laborimport_rischbern</module>
   <module>ch.elexis.laborimport_rischbern.feature</module>
   <module>ch.elexis.laborimport_rothen</module>
@@ -162,14 +162,20 @@
   <module>ch.medshare.mediport.feature</module>
   <module>ch.pharmed.phmprescriber</module>
   <module>ch.pharmed.phmprescriber.feature</module>
-  <module>com.hilotec.elexis.opendocument</module>
-  <module>com.hilotec.elexis.opendocument.feature</module>
-  <module>com.hilotec.elexis.kgview</module>
   <module>com.hilotec.elexis.kgview.feature</module>
-  <module>com.hilotec.elexis.messwerte.v2</module>
+  <module>com.hilotec.elexis.kgview</module>
   <module>com.hilotec.elexis.messwerte.v2.feature</module>
-  <module>com.hilotec.elexis.pluginstatistiken</module>
+  <module>com.hilotec.elexis.messwerte.v2</module>
+  <module>com.hilotec.elexis.opendocument.feature</module>
+  <module>com.hilotec.elexis.opendocument2omnivore.feature</module>
+  <module>com.hilotec.elexis.opendocument2omnivore</module>
+  <module>com.hilotec.elexis.opendocument</module>
   <module>com.hilotec.elexis.pluginstatistiken.feature</module>
+  <module>com.hilotec.elexis.pluginstatistiken</module>
+  <module>com.hilotec.elexis.stickerprefix.feature</module>
+  <module>com.hilotec.elexis.stickerprefix</module>
+  <module>com.hilotec.elexis.toolbar.feature</module>
+  <module>com.hilotec.elexis.toolbar</module>
   <module>de.fhdo.elexis.perspective</module>
   <module>de.fhdo.elexis.perspective.feature</module>
   <module>org.iatrix</module>
@@ -193,21 +199,26 @@
   <module>waelti.statistics</module>
   <module>waelti.statistics.feature</module>
   <module>ch.docbox.elexis</module>
+  <module>ch.elexis.docbox.ws.client</module>
   <module>ch.docbox.elexis.feature</module>
   <module>net.medshare.connector.aerztekasse</module>
   <module>net.medshare.connector.aerztekasse.feature</module>
   <module>net.medshare.connector.viollier</module>
   <module>net.medshare.connector.viollier.feature</module>
+  <module>at.medevit.elexis.tarmed.model</module>
 
   <!-- our test modules -->
   <module>at.medevit.atc_codes.test</module>
   <module>net.medshare.connector.aerztekasse_test</module>
-  <module>ch.pharmed.phmprescriber_test</module>
+<!-- <module>ch.pharmed.phmprescriber_test</module> -->
   <module>ch.elexis.base.ch.arzttarife.test</module>
+  <module>ch.elexis.connect.reflotron.v2test</module>
   <module>ch.elexis.externe_dokumente.tests</module>
   <module>at.medevit.elexis.loinc_test</module>
   <module>ch.elexis.laborimport.viollier.v2_test</module>
+  <module>ch.medshare.elexis_directories.test</module>
   <module>com.hilotec.elexis.messwerte.v2_test</module>
+<!-- <module>at.medevit.elexis.tarmed.model.tests</module> -->
 </modules>
 <repositories>
   <repository>

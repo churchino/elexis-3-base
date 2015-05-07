@@ -44,6 +44,8 @@ public class Vaccination extends PersistentObject {
 	/** Verabreicher, entweder ein Mandant im lokalen System, oder ein Kontakt-String */	
 						public static final String FLD_ADMINISTRATOR = "administrator";
 	/** Impfung gegen */public static final String FLD_VACC_AGAINST = "vaccAgainst";
+	/** side where vaccination was applied (optional)*/	
+						public static final String SIDE = "Side";
 	
 	/** Definition of the database table */
 	static final String createDB =
@@ -243,5 +245,21 @@ public class Vaccination extends PersistentObject {
 			vaccAgainst.add(va);
 		}
 		return vaccAgainst;
+	}
+	
+	public void setAdministratorString(String administrator){
+		set(FLD_ADMINISTRATOR, administrator);
+	}
+	
+	public void setLotNo(String lotNo){
+		set(FLD_LOT_NO, lotNo);
+	}
+	
+	public String getSide(){
+		return checkNull(getExtInfoStoredObjectByKey(SIDE));
+	}
+	
+	public void setSide(final String side){
+		setExtInfoStoredObjectByKey(SIDE, side);
 	}
 }

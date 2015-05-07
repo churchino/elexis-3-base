@@ -38,8 +38,8 @@ public class XMLExporterServices {
 	public static final String ELEMENT_DETAIL = "detail"; //$NON-NLS-1$
 	
 	private static final String ATTR_RECORD_ID = "record_id"; //$NON-NLS-1$
-	private static final String ELEMENT_RECORD_UNCLASSIFIED = "record_unclassified"; //$NON-NLS-1$
-	private static final String ELEMENT_RECORD_PHYSIO = "record_physio"; //$NON-NLS-1$
+	private static final String ELEMENT_RECORD_OTHER = "record_other"; //$NON-NLS-1$
+	private static final String ELEMENT_RECORD_PARAMED = "record_paramed"; //$NON-NLS-1$
 	private static final String ELEMENT_RECORD_MIGEL = "record_migel"; //$NON-NLS-1$
 	private static final String ELEMENT_RECORD_DRUG = "record_drug"; //$NON-NLS-1$
 	private static final String ATTR_UNIT_FACTOR = "unit_factor"; //$NON-NLS-1$
@@ -167,6 +167,11 @@ public class XMLExporterServices {
 		return mMigel;
 	}
 	
+	/**
+	 * paramed and physio can be seen identical as in XML4.4 physio got replaced with paramed
+	 * 
+	 * @return
+	 */
 	public Money getPhysioMoney(){
 		if (!initialized) {
 			initFromElement();
@@ -211,9 +216,9 @@ public class XMLExporterServices {
 						mMedikament.addAmount(element.getAttributeValue(XMLExporter.ATTR_AMOUNT));
 					} else if (element.getName().equals(ELEMENT_RECORD_MIGEL)) {
 						mMigel.addAmount(element.getAttributeValue(XMLExporter.ATTR_AMOUNT));
-					} else if (element.getName().equals(ELEMENT_RECORD_PHYSIO)) {
+					} else if (element.getName().equals(ELEMENT_RECORD_PARAMED)) {
 						mPhysio.addAmount(element.getAttributeValue(XMLExporter.ATTR_AMOUNT));
-					} else if (element.getName().equals(ELEMENT_RECORD_UNCLASSIFIED)) {
+					} else if (element.getName().equals(ELEMENT_RECORD_OTHER)) {
 						mUebrige.addAmount(element.getAttributeValue(XMLExporter.ATTR_AMOUNT));
 					}
 				} catch (ParseException e) {
@@ -355,6 +360,10 @@ public class XMLExporterServices {
 				} else if (v instanceof Labor2009Tarif) {
 					el = new Element(ELEMENT_RECORD_LAB, XMLExporter.nsinvoice); // 28000
 					el.setAttribute(XMLExporter.ATTR_TARIFF_TYPE, v.getCodeSystemCode());
+					el.setAttribute(ATTR_EAN_PROVIDER,
+						TarmedRequirements.getEAN(konsultation.getMandant()));
+					el.setAttribute(ATTR_EAN_RESPONSIBLE,
+						XMLExporterUtil.getResponsibleEAN(konsultation));
 					Labor2009Tarif ll = (Labor2009Tarif) v;
 					double mult = ll.getFactor(tt, rechnung.getFall());
 					Money preis = verrechnet.getNettoPreis();
@@ -432,6 +441,10 @@ public class XMLExporterServices {
 					el.setAttribute(ATTR_UNIT_FACTOR, "1.0"); //$NON-NLS-1$
 					el.setAttribute(XMLExporter.ATTR_TARIFF_TYPE, "452"); // MiGeL ab 2001-basiert //$NON-NLS-1$
 					el.setAttribute(XMLExporter.ATTR_CODE, ((MiGelArtikel) v).getCode());
+					el.setAttribute(ATTR_EAN_PROVIDER,
+						TarmedRequirements.getEAN(konsultation.getMandant()));
+					el.setAttribute(ATTR_EAN_RESPONSIBLE,
+						XMLExporterUtil.getResponsibleEAN(konsultation));
 					Money mAmountLocal = new Money(preis);
 					mAmountLocal.multiply(zahl);
 					el.setAttribute(XMLExporter.ATTR_AMOUNT, XMLTool.moneyToXmlDouble(mAmountLocal));
@@ -440,7 +453,7 @@ public class XMLExporterServices {
 					el.setAttribute(ATTR_VALIDATE, TARMED_TRUE);
 					ret.mMigel.addMoney(mAmountLocal);
 				} else if (v instanceof PhysioLeistung) {
-					el = new Element(ELEMENT_RECORD_PHYSIO, XMLExporter.nsinvoice);
+					el = new Element(ELEMENT_RECORD_PARAMED, XMLExporter.nsinvoice);
 					el.setAttribute(XMLExporter.ATTR_TARIFF_TYPE, v.getCodeSystemCode()); // 28060
 					PhysioLeistung pl = (PhysioLeistung) v;
 					double mult = pl.getFactor(tt, rechnung.getFall());
@@ -468,7 +481,7 @@ public class XMLExporterServices {
 					ret.mPhysio.addMoney(mAmountLocal);
 				} else {
 					Money preis = verrechnet.getNettoPreis();
-					el = new Element(ELEMENT_RECORD_UNCLASSIFIED, XMLExporter.nsinvoice);
+					el = new Element(ELEMENT_RECORD_OTHER, XMLExporter.nsinvoice);
 					el.setAttribute(XMLExporter.ATTR_TARIFF_TYPE, v.getCodeSystemCode());
 					el.setAttribute(ATTR_UNIT, XMLTool.moneyToXmlDouble(preis));
 					el.setAttribute(ATTR_UNIT_FACTOR, "1.0"); //$NON-NLS-1$
@@ -479,6 +492,12 @@ public class XMLExporterServices {
 					el.setAttribute(ATTR_VALIDATE, TARMED_TRUE);
 					el.setAttribute(ATTR_OBLIGATION, "false"); //$NON-NLS-1$
 					el.setAttribute("external_factor", "1.0"); //$NON-NLS-1$ //$NON-NLS-2$
+					
+					el.setAttribute(ATTR_EAN_PROVIDER,
+						TarmedRequirements.getEAN(konsultation.getMandant()));
+					el.setAttribute(ATTR_EAN_RESPONSIBLE,
+						XMLExporterUtil.getResponsibleEAN(konsultation));
+					
 					ret.mUebrige.addMoney(mAmountLocal);
 				}
 				el.setAttribute(ATTR_RECORD_ID, Integer.toString(recordNumber++)); // 22010

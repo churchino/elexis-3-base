@@ -16,8 +16,13 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
@@ -25,17 +30,16 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ch.artikelstamm.elexis.common.ArtikelstammItem;
-import ch.elexis.core.ui.UiDesk;
-import ch.elexis.data.NamedBlob2;
-import ch.elexis.data.PersistentObject;
-import ch.elexis.data.Query;
-import ch.rgw.tools.JdbcLink;
-import ch.rgw.tools.TimeTool;
 import at.medevit.atc_codes.ATCCode;
 import at.medevit.atc_codes.ATCCodeService;
 import at.medevit.ch.artikelstamm.ArtikelstammConstants.TYPE;
 import at.medevit.ch.artikelstamm.elexis.common.internal.ATCCodeServiceConsumer;
+import ch.artikelstamm.elexis.common.ArtikelstammItem;
+import ch.elexis.core.ui.UiDesk;
+import ch.elexis.data.NamedBlob2;
+import ch.elexis.data.PersistentObject;
+import ch.rgw.tools.JdbcLink.Stm;
+import ch.rgw.tools.TimeTool;
 
 /**
  * Provide a cache for the number of elements available in the Artikelstamm set for each ATC code.
@@ -102,7 +106,9 @@ public class ATCCodeCache {
 				return -1;
 			}
 		}
-		return cache.get(element.atcCode);
+		
+		Integer value = cache.get(element.atcCode);
+		return (value!=null) ? value : 0;
 	}
 	
 	public static void rebuildCache(IProgressMonitor monitor){
@@ -112,19 +118,47 @@ public class ATCCodeCache {
 		monitor.beginTask("Rebuilding index of available articles per ATC Code", numberOfATCCodes+1);
 		
 		cache = new HashMap<String, Integer>(numberOfATCCodes);
+	
+		TreeMap<String, Integer> tm = new TreeMap<String, Integer>();
+		String query = "SELECT " + ArtikelstammItem.FLD_ATC + " FROM " + ArtikelstammItem.TABLENAME;
+		Stm stm = PersistentObject.getConnection().getStatement();
+		ResultSet rs = stm.query(query);
+		try {
+			while (rs.next()) {
+				String atc = rs.getString(1);
+				if(atc==null) continue;
+				if (!tm.containsKey(atc)) {
+					tm.put(atc, 0);
+				}
+				Integer integer = tm.get(atc);
+				tm.put(atc, integer + 1);
+			}
+			rs.close();
+		} catch (SQLException se) {}
+		
+		PersistentObject.getConnection().releaseStatement(stm);
 		
 		for (ATCCode atcCode : allATCCodes) {
-			String query =
-				"SELECT COUNT(*) FROM " + ArtikelstammItem.TABLENAME + " WHERE "
-					+ ArtikelstammItem.FLD_ATC + " " + Query.LIKE + " "
-					+ JdbcLink.wrap(atcCode.atcCode + "%");
-			
-			int foundElements = PersistentObject.getConnection().queryInt(query);
+			int foundElements = 0;
+		
+			ATCCode next = atcCodeService.getNextInHierarchy(atcCode);			
+			SortedMap<String, Integer> subMap;
+			if(next!=null) {
+				subMap = tm.subMap(atcCode.atcCode, next.atcCode);
+			} else {
+				subMap = tm.tailMap(atcCode.atcCode);
+			}	
+
+			for (Iterator<String> a = subMap.keySet().iterator(); a.hasNext();) {
+				String val = a.next();
+				foundElements += tm.get(val);
+			}
 			cache.put(atcCode.atcCode, foundElements);
+			
 			monitor.worked(1);
 		}
 		
-		monitor.subTask("Persisting cache to database");
+		monitor.subTask("Persisting ATC Code product cache to database");
 		// clear old caches
 		NamedBlob2.cleanup(NAMED_BLOB_PREFIX, new TimeTool());
 		

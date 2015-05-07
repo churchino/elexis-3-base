@@ -15,6 +15,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -167,12 +168,12 @@ public class ArtikelstammItem extends Artikel implements IArtikelstammItem {
 	
 	@Override
 	public String getLabel(){
-		return get(FLD_DSCR) + " (" + get(FLD_ADDDSCR) + ")";
+		String[] vals = get(true, FLD_DSCR, FLD_ADDDSCR);
+		return vals[0] + " (" + vals[1] + ")";
 	}
 	
 	@Override
 	protected String getTableName(){
-		//
 		return TABLENAME;
 	}
 	
@@ -616,9 +617,7 @@ public class ArtikelstammItem extends Artikel implements IArtikelstammItem {
 	 */
 	public boolean isBlackBoxed(){
 		String val = get(FLD_BLACKBOXED);
-		if (!val.equals(StringConstants.ZERO))
-			return true;
-		return false;
+		return !(StringConstants.ZERO.equals(val));
 	}
 	
 	/**
@@ -653,7 +652,13 @@ public class ArtikelstammItem extends Artikel implements IArtikelstammItem {
 	
 	@Override
 	public TYPE getType(){
-		return ArtikelstammConstants.TYPE.valueOf(get(FLD_ITEM_TYPE));
+		try {
+			return ArtikelstammConstants.TYPE.valueOf(get(FLD_ITEM_TYPE));
+		} catch (IllegalArgumentException iae) {
+			// be more resilient on wrong database entries (e.g. #3193)
+			log.error("Invalid TYPE argument for " + getId() + ": " + get(FLD_ITEM_TYPE));
+			return null;
+		}
 	}
 	
 	public String getTyp(){
@@ -765,6 +770,18 @@ public class ArtikelstammItem extends Artikel implements IArtikelstammItem {
 	}
 	
 	/**
+	 * @return alternative {@link ArtikelstammItem} objects that match the ATC code
+	 */
+	public @NonNull List<ArtikelstammItem> getAlternativeArticlesByATCGroup() {
+		String code = getATC_code();
+		if(code==null || code.length()<1) return Collections.emptyList();
+		
+		Query<ArtikelstammItem> qre = new Query<ArtikelstammItem>(ArtikelstammItem.class);
+		qre.add(ArtikelstammItem.FLD_ATC, Query.EQUALS, code);
+		return qre.execute();
+	}
+	
+	/**
 	 * @param ean
 	 *            the European Article Number or GTIN
 	 * @return the ArtikelstammItem that fits the provided EAN/GTIN or <code>null</code> if not
@@ -813,5 +830,10 @@ public class ArtikelstammItem extends Artikel implements IArtikelstammItem {
 		qbe.add(MAXBESTAND, Query.GREATER, StringConstants.ZERO);
 		List<ArtikelstammItem> l = qbe.execute();
 		return l == null ? new ArrayList<ArtikelstammItem>(0) : l;
+	}
+	
+	@Override
+	public int getCacheTime(){
+		return 30;
 	}
 }
